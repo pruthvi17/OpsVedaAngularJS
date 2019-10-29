@@ -1,0 +1,20 @@
+.todo-list li.newItem label {
+	color: red;
+	transition: color 30s;
+}
+
+.todo-list li.yellow label {
+	color: yellow;
+}
+
+.todo-list li.magenta label {
+	color: magenta;
+}
+
+.todo-list li.green label {
+	color: green;
+}
+
+.todo-list li.newItem label {
+	color: red;
+}
