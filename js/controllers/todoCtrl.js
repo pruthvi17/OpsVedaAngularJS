@@ -57,7 +57,7 @@ angular.module('todomvc')
 				});
 		};
 
-		$scope.editTodo = function (todo, a,b) {
+		$scope.editTodo = function (todo) {
 			$scope.editedTodo = todo;
 			// Clone the original todo to restore it on demand.
 			$scope.originalTodo = angular.extend({}, todo);
