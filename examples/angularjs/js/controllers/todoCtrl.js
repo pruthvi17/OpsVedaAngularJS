@@ -13,6 +13,7 @@ angular.module('todomvc')
 
 		$scope.newTodo = '';
 		$scope.editedTodo = null;
+		$scope.completedTodos = [];
 
 		$scope.$watch('todos', function () {
 			$scope.remainingCount = $filter('filter')(todos, { completed: false }).length;
@@ -20,11 +21,23 @@ angular.module('todomvc')
 			$scope.allChecked = !$scope.remainingCount;
 		}, true);
 
+		$scope.getColor = function(row, index) {
+			if(row.completed === true) {
+				if ($scope.completedTodos.indexOf(row.title) === 0) return 'completed green'
+				if ($scope.completedTodos.indexOf(row.title) === 1) return 'completed magenta'
+				if ($scope.completedTodos.indexOf(row.title) === 2) return 'completed yellow'
+				else return 'completed'
+			}
+			else if(row == $scope.editedTodo) return 'editing'
+			else if(row.isNew) return 'newItem'
+		};
+
 		// Monitor the current route for changes and adjust the filter accordingly.
 		$scope.$on('$routeChangeSuccess', function () {
 			var status = $scope.status = $routeParams.status || '';
 			$scope.todos.forEach(function(key) {
 				key.isNew = false;
+				if(key.completed) $scope.completedTodos.unshift(key.title)
 			});
 			$scope.statusFilter = (status === 'active') ?
 				{ completed: false } : (status === 'completed') ?
@@ -57,7 +70,7 @@ angular.module('todomvc')
 				});
 		};
 
-		$scope.editTodo = function (todo, a,b) {
+		$scope.editTodo = function (todo) {
 			$scope.editedTodo = todo;
 			// Clone the original todo to restore it on demand.
 			$scope.originalTodo = angular.extend({}, todo);
@@ -87,7 +100,9 @@ angular.module('todomvc')
 			}
 
 			store[todo.title ? 'put' : 'delete'](todo)
-				.then(function success() {}, function error() {
+				.then(function success() {
+					($scope.completedTodos.indexOf(todo.title) !== -1) ? $scope.completedTodos[$scope.completedTodos.indexOf(todo.title)] = todo.title : null
+				}, function error() {
 					todo.title = $scope.originalTodo.title;
 				})
 				.finally(function () {
@@ -103,6 +118,7 @@ angular.module('todomvc')
 		};
 
 		$scope.removeTodo = function (todo) {
+			($scope.completedTodos.indexOf(todo.title) !== -1) ? $scope.completedTodos.splice($scope.completedTodos.indexOf(todo.title),1) : null;
 			store.delete(todo);
 		};
 
@@ -114,14 +130,28 @@ angular.module('todomvc')
 			var compDt = new Date();
 			if (angular.isDefined(completed)) {
 				todo.completed = completed;
-				if (todo.completed === true) todo.completedTime = compDt.getHours() + ":" + compDt.getMinutes() + ":" + compDt.getSeconds()
-				else todo.completedTime = ''
+				if (todo.completed === true){ 
+					todo.completedTime = compDt.getHours() + ":" + compDt.getMinutes() + ":" + compDt.getSeconds();
+					($scope.completedTodos.indexOf(todo.title) === -1) ? $scope.completedTodos.unshift(todo.title) : null;
+				}
+				else {
+					todo.completedTime = '';
+					($scope.completedTodos.indexOf(todo.title) !== -1) ? 
+					($scope.completedTodos.indexOf(todo.title) === 0) ? 
+					$scope.completedTodos.shift() : $scope.completedTodos.splice($scope.completedTodos.indexOf(todo.title),1) : null;
+				}
 			}
 			store.put(todo, todos.indexOf(todo))
 				.then(function success() {}, function error() {
 					todo.completed = !todo.completed;
-					if (todo.completed === true) todo.completedTime = compDt.getHours() + ":" + compDt.getMinutes() + ":" + compDt.getSeconds()
-					else todo.completedTime = ''
+					if (todo.completed === true){ 
+						todo.completedTime = compDt.getHours() + ":" + compDt.getMinutes() + ":" + compDt.getSeconds();
+						($scope.completedTodos.indexOf(todo.title) === -1) ? $scope.completedTodos.unshift(todo.title) : null;
+					}
+					else {
+						todo.completedTime = '';
+						($scope.completedTodos.indexOf(todo.title) !== -1) ? ($scope.completedTodos.length === 1) ? $scope.completedTodos=[] : $scope.completedTodos.splice($scope.completedTodos.indexOf(todo.title),1) : null;
+					}
 				});
 		};
 
